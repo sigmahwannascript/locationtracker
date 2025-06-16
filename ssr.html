@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>แผนที่ตำแหน่งของฉัน</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    crossorigin=""
+  />
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    crossorigin=""
+  ></script>
+  <script src="https://unpkg.com/leaflet-providers/leaflet-providers.js"></script>
+
+  <style>
+    body {
+      font-family: 'Helvetica Neue', sans-serif;
+      background-image: url('https://images.unsplash.com/photo-1503264116251-35a269479413?auto=format&fit=crop&w=1470&q=80');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      margin: 0;
+    }
+
+    #map {
+      filter: grayscale(100%);
+    }
+  </style>
+</head>
+<body class="backdrop-blur-md bg-white/70 min-h-screen flex flex-col items-center justify-center">
+
+  <div class="w-full max-w-7xl px-6 py-8 space-y-6">
+    <h1 class="text-4xl font-bold text-center mb-4">📍 ตำแหน่งของฉัน + แผนที่ใหญ่เต็มจอ</h1>
+
+    <div class="flex flex-col md:flex-row gap-4 justify-center items-center">
+      <button onclick="getLocation()" class="px-6 py-3 text-lg border border-black hover:bg-black hover:text-white transition rounded">
+        ตรวจจับตำแหน่งของฉัน
+      </button>
+      <button onclick="toggleMapType()" class="px-6 py-3 text-lg border border-black hover:bg-black hover:text-white transition rounded">
+        สลับแผนที่ดาวเทียม / ปกติ
+      </button>
+    </div>
+
+    <div class="flex gap-4 justify-center mt-4 text-lg">
+      <input id="lat" type="text" class="w-1/3 p-3 border rounded bg-gray-100 text-center" placeholder="Latitude" readonly />
+      <input id="lng" type="text" class="w-1/3 p-3 border rounded bg-gray-100 text-center" placeholder="Longitude" readonly />
+    </div>
+
+    <div id="map" class="w-full h-[75vh] rounded-xl shadow-xl border border-gray-300"></div>
+  </div>
+
+  <script>
+    let map, marker;
+    let normalLayer, satelliteLayer;
+    let isSatellite = false;
+
+    function initMap(lat = 13.7563, lng = 100.5018) {
+      map = L.map('map').setView([lat, lng], 14);
+
+      normalLayer = L.tileLayer.provider('OpenStreetMap.Mapnik').addTo(map);
+      satelliteLayer = L.tileLayer.provider('Esri.WorldImagery');
+
+      marker = L.marker([lat, lng]).addTo(map);
+    }
+
+    function getLocation() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+
+            document.getElementById('lat').value = lat.toFixed(6);
+            document.getElementById('lng').value = lng.toFixed(6);
+
+            if (!map) {
+              initMap(lat, lng);
+            }
+
+            marker.setLatLng([lat, lng]);
+            map.setView([lat, lng], 16);
+          },
+          (error) => {
+            alert("ไม่สามารถระบุตำแหน่งได้: " + error.message);
+          }
+        );
+      } else {
+        alert("เบราว์เซอร์ไม่รองรับการระบุตำแหน่ง");
+      }
+    }
+
+    function toggleMapType() {
+      if (!map) return;
+
+      if (isSatellite) {
+        map.removeLayer(satelliteLayer);
+        normalLayer.addTo(map);
+      } else {
+        map.removeLayer(normalLayer);
+        satelliteLayer.addTo(map);
+      }
+      isSatellite = !isSatellite;
+    }
+
+    window.onload = () => {
+      initMap();
+    };
+  </script>
+
+</body>
+</html>
